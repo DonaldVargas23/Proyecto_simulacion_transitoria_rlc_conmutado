@@ -1,0 +1,55 @@
+$ Circuito RLC con switch y fuente escalonada
+
+
+
+I1 0 n1  DC 4 $ Fuente de corriente con un valor de 4A conectada entre los nodos 1 y tierra.
+
+
+VR1 nf1 0 DC 0 $ Fuente de voltaje con un valor de 0V, conectada entre los nodos 1 y el nodo de referencia 1,
+                $ la función de dicha fuente es permitir la medición de la corriente en la rama de la resistencia 1.
+R1 n1 nf1 2    $ Resistencia con un valor de 2Ω conectada entre el nodo de referencia 1 y tierra.
+
+
+VR2 nf2 0 DC 0 $ Fuente de voltaje con un valor de 0V, conectada entre los nodos 3 y el nodo de referencia 2,
+                $ la función de dicha fuente es permitir la medición de la corriente en la rama de la resistencia 2.
+R2 n2 nf2 5    $ Resistencia con un valor de 5Ω conectada entre el nodo de referencia 2 y tierra.
+
+VR3 n3 nf3 DC 0 $ Fuente de voltaje con un valor de 0V, conectada entre los nodos 2 y el nodo de referencia 3,
+                $ la función de dicha fuente es permitir la medición de la corriente en la rama del capacitor.
+C1 nf3 0 10mF $ Capacitor con un valor de 10mF conectado entre el nodo de referencia 3 y tierra.
+
+VS1 0 nr1 pulse(1 -1 1 1u 1u)  
+VS2 0 nr2 pulse(-1 1 1 1u 1u) 
+
+S1 n1 n3 0 nr1 switch
+S2 n2 n3 0 nr2 switch
+
+$ Cuando t<1s: VS1=5V, por lo tanto se cierra S1, y el nodo 1 se conecta con el nodo 2.
+$ VS2=-1, por lo tanto, S2 se abre.
+$Cuando t>=1s: VS1=-1, por lo tanto, S1 se abre, VS2=5V, por lo tanto S2 se cierra, y se conecta el nodo 2 y el nodo 3.
+.model switch sw(ron=0.0001 roff=1e9 vt=0.5)    
+
+
+
+R3 n3 n4 8    $ Resistencia con un valor de 8Ω conectada entre el nodo 2 y el nodo 4.
+L1 n4 0 2     $ Inductor con un valor de 2H conectado entre el nodo 4 y tierra.
+R4 n4 n5 9    $ Resistencia con un valor de 9Ω conectada entre el nodo 4 y el nodo 5.
+
+
+
+V2 n5 0 dc 0 pulse(0 5 2) $ Fuente de Voltaje escalonada conectada entre el nodo 5 y tierra, busca simular la función 5µ(t-2)
+                                  $ utilizando la función pulse la cual determina que: 0<t<2, V=0. t=<2.001, V=5V.
+.control 
+tran 0.01 5 $ Función de análisis transitorio configurada para que registre datos cada 0.01 segundos en un lapso desde 0s hasta 10s
+
+
+gnuplot datosir1 i(VR1) title "Corriente en la Resistencia 1" $ Impresión de las gráficas.
+gnuplot datosir2 i(VR2) title "Corriente en la Resistencia 2"
+gnuplot datosil i(L1) title "Corriente en el Inductor"
+gnuplot datosir1 v(n3) title "Voltaje en el capacitor"
+* gnuplot datoss i(VR1), i(VR2), i(L1), v(n2) title "Datos juntos"
+* gnuplot datosic2 i(vr3) title "Corriente en el capacitor"
+* gnuplot datosil2 v(n4) title "Voltaje en el inductor"
+.endc
+
+.end
